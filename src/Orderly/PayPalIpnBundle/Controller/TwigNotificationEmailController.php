@@ -11,7 +11,7 @@ use Orderly\PayPalIpnBundle\Event as Events;
 
 
 /*
- * Copyright 2012 Orderly Ltd 
+ * Copyright 2012 Orderly Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ use Orderly\PayPalIpnBundle\Event as Events;
  */
 class TwigNotificationEmailController extends Controller
 {
-    
+
     public $paypal_ipn;
     /**
      * @Route("/ipn-twig-email-notification")
@@ -41,7 +41,7 @@ class TwigNotificationEmailController extends Controller
     {
         //getting ipn service registered in container
         $this->paypal_ipn = $this->get('orderly_pay_pal_ipn');
-        
+
         //validate ipn (generating response on PayPal IPN request)
         if ($this->paypal_ipn->validateIPN())
         {
@@ -57,7 +57,7 @@ class TwigNotificationEmailController extends Controller
                 //preparing message
                 $message = \Swift_Message::newInstance()
                     ->setSubject('Order confirmation')
-                    ->setFrom('support@CHANGEME.com', 'TEST')
+                    ->setFrom('support@outlooksyncwizard.com', 'Chris')
                     ->setTo($this->paypal_ipn->getOrder()->getPayerEmail(), $this->paypal_ipn->getOrder()->getFirstName() .' '. $this->paypal_ipn->getOrder()->getLastName())
                     ->setBody($this->renderView('OrderlyPayPalIpnBundle:Default:confirmation_email.html.twig',
                             // Prepare the variables to populate the email template:
@@ -77,7 +77,7 @@ class TwigNotificationEmailController extends Controller
 
         $response = new Response();
         $response->setStatusCode(200);
-        
+
         return $response;
     }
 
