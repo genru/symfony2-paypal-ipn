@@ -51,8 +51,11 @@ class TwigNotificationEmailController extends Controller
             // And we save the order now (persist and extract are separate because you might only want to persist the order in certain circumstances).
             $this->paypal_ipn->saveOrder();
 
+            // paypal_ipn ready notify and retrive product key;
+            $product_key = $this->triggerEvent(Events\PayPalEvents::RECEIVED);
+
             // Now let's check what the payment status is and act accordingly
-            if ($this->paypal_ipn->getOrderStatus() == Ipn::PAID)
+            if ($this->paypal_ipn->getOrderStatus() == Ipn::PAID && $product_key!=null)
             {
                 //preparing message
                 $message = \Swift_Message::newInstance()
@@ -62,9 +65,11 @@ class TwigNotificationEmailController extends Controller
                     ->setBody($this->renderView('OrderlyPayPalIpnBundle:Default:confirmation_email.html.twig',
                             // Prepare the variables to populate the email template:
                             array('order' => $this->paypal_ipn->getOrder(),
-                                  'items' => $this->paypal_ipn->getOrderItems())
+                                  'items' => $this->paypal_ipn->getOrderItems(),
+                                  'key' => $product_key)
                             ), 'text/html')
                 ;
+
                 //send message
                 $this->get('mailer')->send($message);
             }
@@ -73,7 +78,6 @@ class TwigNotificationEmailController extends Controller
         {
             return $this->redirect('/');
         }
-        $this->triggerEvent(Events\PayPalEvents::RECEIVED);
 
         $response = new Response();
         $response->setStatusCode(200);
@@ -83,6 +87,8 @@ class TwigNotificationEmailController extends Controller
 
     private function triggerEvent($event_name) {
         $dispatcher = $this->container->get('event_dispatcher');
-        $dispatcher->dispatch($event_name, new Events\PayPalEvent($this->paypal_ipn));
+        $event = new Events\PayPalEvent($this->paypal_ipn);
+        $dispatcher->dispatch($event_name, $event);
+        return $event->getProductKey();
     }
 }
